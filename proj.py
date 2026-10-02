@@ -66,6 +66,10 @@ if __name__ == "__main__":
     server_thread = threading.Thread(name="server", target=server)
     server_thread.start()
 
+<<<<<<< HEAD
+=======
+    time.sleep(random.random() * 5)
+>>>>>>> 338d142d704c2c66b61153401ff3b0573467d812
 
     client_thread = threading.Thread(name="client", target=client)
     client_thread.start()
@@ -73,4 +77,8 @@ if __name__ == "__main__":
     server_thread.join()
     client_thread.join()
 
+<<<<<<< HEAD
+=======
+    time.sleep(5)
+>>>>>>> 338d142d704c2c66b61153401ff3b0573467d812
     print("Done.")
