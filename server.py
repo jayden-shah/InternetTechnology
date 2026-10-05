@@ -5,7 +5,7 @@ import socket
 
 
 ASSIGNED_PORT = 30037
-SERVER_HOST = "127.0.0.1"
+SERVER_HOST = "0.0.0.0"
 
 
 def server():

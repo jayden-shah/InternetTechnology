@@ -4,8 +4,7 @@ import socket
 
 
 ASSIGNED_PORT = 30037
-SERVER_HOST = "127.0.0.1"
-
+SERVER_HOST = "ilab2.cs.rutgers.edu"
 
 def client():
     try:
@@ -23,28 +22,47 @@ def client():
                 message = line.rstrip('\r\n')
                 request_str = f"{line_number}|{message}\n"
                 client_socket.sendall(request_str.encode("utf-8"))
-                
-                record_found = False
-                while not record_found:
-                    if b'\n' in receive_buffer:
-                        record_bytes, receive_buffer = receive_buffer.split(b'\n', 1)
-                        parts = record_bytes.decode("utf-8").split('|', 2)
-                        
-                        if len(parts) == 3:
-                            recv_line_num, reported_len, transformed_msg = parts
-                            reported_len = int(reported_len)
-                            actual_len = len(transformed_msg.encode("utf-8"))
-                            
-                            if int(recv_line_num) == line_number and reported_len == actual_len:
-                                outfile.write(f"{recv_line_num}|{reported_len}|{transformed_msg}\n")
-                            else:
-                                outfile.write(f"{line_number} | ERROR | reported-length={reported_len} | actual-length={actual_len}\n")
-                        record_found = True
-                    else:
-                        chunk = client_socket.recv(4096)
-                        if not chunk:
-                            break
-                        receive_buffer += chunk
+                print(f"[C]: Data sent to server: {message}")
+
+                record_bytes = None
+                for chunk in iter(lambda: client_socket.recv(4096), b""):
+                    receive_buffer += chunk
+                    if b"\n" in receive_buffer:
+                        record_bytes, receive_buffer = receive_buffer.split(b"\n", 1)
+                        break
+
+                if record_bytes is None:
+                    print(f"[C]: Server closed before responding to line {line_number}")
+                    break
+                try:
+                    response = record_bytes.decode("utf-8")
+                    parts = response.split("|", 2)
+                    if len(parts) != 3:
+                        raise ValueError("response must contain three fields")
+                    recv_line_num, reported_len, transformed_msg = parts
+                    recv_line_num = int(recv_line_num)
+                    reported_len = int(reported_len)
+                except (UnicodeDecodeError, ValueError) as err:
+                    print(
+                        f"[C]: Malformed response for line {line_number}: {err}"
+                    )
+                    continue
+
+                print(f"[C]: Data received from server: {transformed_msg}")
+                actual_len = len(transformed_msg.encode("utf-8"))
+
+                if recv_line_num == line_number and reported_len == actual_len:
+                    outfile.write(f"{recv_line_num}|{reported_len}|{transformed_msg}\n")
+                else:
+                    print(
+                        f"[C]: Invalid response for line {line_number}: "
+                        f"returned line {recv_line_num}, reported length "
+                        f"{reported_len}, actual length {actual_len}"
+                    )
+                    outfile.write(
+                        f"{line_number}|ERROR|reported-length={reported_len}|"
+                        f"actual-length={actual_len}\n"
+                    )
     except OSError as err:
         print(f"[C]: Client error: {err}")
     finally:
