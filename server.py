@@ -1,5 +1,3 @@
-"""CS 352 Project 1 starter server, separated from proj.py."""
-
 import random
 import socket
 

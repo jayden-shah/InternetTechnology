@@ -1,5 +1,3 @@
-"""CS 352 Project 1 starter client, separated from proj.py."""
-
 import socket
 import sys
 
