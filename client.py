@@ -1,10 +1,10 @@
 """CS 352 Project 1 starter client, separated from proj.py."""
 
 import socket
-
+import sys
 
 ASSIGNED_PORT = 30037
-SERVER_HOST = "ilab2.cs.rutgers.edu"
+SERVER_HOST = sys.argv[1] if len(sys.argv) > 1 else "localhost"
 
 def client():
     try:
@@ -25,11 +25,13 @@ def client():
                 print(f"[C]: Data sent to server: {message}")
 
                 record_bytes = None
-                for chunk in iter(lambda: client_socket.recv(4096), b""):
-                    receive_buffer += chunk
-                    if b"\n" in receive_buffer:
-                        record_bytes, receive_buffer = receive_buffer.split(b"\n", 1)
+                while b"\n" not in receive_buffer:
+                    chunk = client_socket.recv(4096)
+                    if not chunk:
                         break
+                    receive_buffer += chunk
+                if b"\n" in receive_buffer:
+                    record_bytes, receive_buffer = receive_buffer.split(b"\n", 1)
 
                 if record_bytes is None:
                     print(f"[C]: Server closed before responding to line {line_number}")
